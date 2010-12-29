@@ -1,0 +1,50 @@
+#{extends 'main.html' /}
+#{set title:'Home' /}
+
+<style type="text/css">
+div.section, dt, dd {
+  position: relative;
+  float: left;
+}
+div.actions {
+  clear: both;
+}
+div.section {
+  margin-left: 2em;
+  padding: 10px;
+  border: 1px solid #444;
+}
+dt {
+  clear: left;
+  background-color: #444;
+  color: #eee;
+  margin-top: 2px;
+  width: 12em;
+  text-align: right;
+  padding-right: 5px;
+}
+dd {
+  margin-left: 1em;
+}
+</style>
+
+<h1>Play Config Demo Application</h1>
+
+<div class="section">
+<h2>Application Configurations</h2>
+<dl>
+#{list items:configuration.keySet()}
+<dt>${_}</dt>
+<dd>${configuration.get(_)}</dd>
+#{/list}
+</dd>
+</div>
+
+<div class="section">
+<h2>Scheduled Jobs</h2>
+<pre>${jobsPlugin.getStatus()}</pre>
+</div>
+
+<div class="section actions">
+  <a href="/configure/">Configure Console</a>
+</div>

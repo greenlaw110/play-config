@@ -1,0 +1,100 @@
+#{extends 'main.html' /}
+#{set title:'Play Config Console' /}
+<h1>Play Config Console</h1>
+
+<style type="text/css">
+ul.header > li {
+  background-color: #444;
+  color: #eee;
+}
+ul.header, ul.table, ul.row {
+  list-style: none;
+  padding: 0;
+}
+ul.header > li, ul.row > li {
+  display: inline-block;
+  padding-top: 2px;
+  padding-left: 10px;
+}
+ul.header, ul.table {
+  margin: 0;
+}
+li.even ul.row > li {
+  background-color: #efefef;
+  height: 1.8em;
+}
+li.key {width: 13em;}
+li.value {width: 20em;}
+li.action {width: 8em;}
+
+div.error, div.success {
+  padding: 5px;
+  border: 1px solid #888;
+}
+div.error {
+  background-color: #FFF0F5;
+  color: #FF4500;
+  border-color: #FF4500;
+}
+div.success {
+  background-color: #98FB98;
+  color: #006400;
+  border-color: #006400;
+}
+div.success, div.actions, div.error, ul.header, ul.table {
+  position:relative;
+  float: left;
+  clear: both;
+}
+div.actions {
+  margin-top: 1em;
+}
+form.action {
+  position:relative;
+  float: left;
+}
+</style>
+
+#{if flash.error}
+<div class="error">
+  <strong>${flash.error}</strong>
+</div>
+#{/if}
+#{if flash.success}
+<div class="success">
+  <strong>${flash.success}</strong>
+</div>
+#{/if}
+
+<ul class="header">
+  <li class="key">key</li>
+  <li class="value">value</li>
+  <li class="action">action</li>
+</ul>
+<ul class="table">
+#{list items:configuration}
+<li class="${_parity}">
+  #{form @update()}
+  <input type="hidden" name="key" value="${_.key}"/>
+  <ul class="row">
+    <li class="key">${_.key}</li>
+    <li class="value">
+      <input type="text" name="value" value="${_.value}" size="40"/>
+    </li>
+    <li class="action">
+      <input type="submit" name="_save" value="save"/>
+      <input type="submit" name="_delete" value="delete"/>
+    </li>
+  </ul>
+  #{/form}
+</li>
+#{/list}
+</ul>
+<div class="actions">
+#{form @reset(), class: "action"}
+<input type="submit" value="reset" title="reset configuration to application.conf"/>
+#{/form} 
+#{form @restart(), class: "action"}
+<input type="submit" value="restart" title="restart Play"/>
+#{/form}
+</div>
