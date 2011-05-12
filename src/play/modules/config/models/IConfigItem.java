@@ -1,7 +1,6 @@
 package play.modules.config.models;
 
 import java.util.List;
-import java.util.Properties;
 
 import play.modules.config.ConfigPlugin;
 

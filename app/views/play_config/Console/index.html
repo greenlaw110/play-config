@@ -22,8 +22,8 @@ li.even ul.row > li {
   background-color: #efefef;
   height: 1.8em;
 }
-li.key {width: 13em;}
-li.value {width: 50em;}
+li.key {width: 20em;}
+li.value {width: 45em;}
 li.action {width: 8em;}
 
 div.error, div.success {
@@ -76,9 +76,9 @@ form.action {
   #{form @update()}
   <input type="hidden" name="key" value="${_.key}"/>
   <ul class="row">
-    <li class="key">${_.key}</li>
+    <li class="key" title="${_.key}">${_.key}</li>
     <li class="value">
-      <input type="text" name="value" value="${_.value}" style="width: 44em"/>
+      <input type="text" name="value" value="${_.value}" style="width: 40em"/>
     </li>
     <li class="action">
       <input type="submit" name="_save" value="save"/>
@@ -90,8 +90,11 @@ form.action {
 #{/list}
 </ul>
 <div class="actions">
+#{form @index(), class: "action", method: "get"}
+<input type="submit" value="reset" title="reset configuration to previous state"/>
+#{/form} 
 #{form @reset(), class: "action"}
-<input type="submit" value="reset" title="reset configuration to application.conf"/>
+<input type="submit" value="reload" title="reload configuration from application.conf"/>
 #{/form} 
 #{form @restart(), class: "action"}
 <input type="submit" value="restart" title="restart Play"/>

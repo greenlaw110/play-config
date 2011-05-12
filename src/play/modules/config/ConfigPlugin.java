@@ -36,7 +36,8 @@ import play.modules.config.models.JPAConfigItem;
  * @version 1.0 18/12/2010
  */
 public class ConfigPlugin extends PlayPlugin {
-   public static final String VERSION = "1.0";
+   public static final String VERSION = "1.1";
+   public static final String CONF_PREFIX = "config.prefix";
    private static final String DEF_MODEL_CLS_ = JPAConfigItem.class.getName();
 
    private static String msg_(String msg) {
@@ -44,15 +45,22 @@ public class ConfigPlugin extends PlayPlugin {
    }
 
    /**
-    * Return true if key start with "app." or "cron."
+    * Return true if key start with "app.", "cron." or any other prefixies configured with {@link #CONF_PREFIX}
     * 
     * @param key
     * @return
     */
-   public static boolean isAppConfig(String key) {
-      return key.startsWith("app.") || key.startsWith("cron.");
+   public static boolean isAppConfig(String key) { 
+	   String prefixes = Play.configuration.getProperty(CONF_PREFIX, "");
+	   prefixes += ",app,cron,config.prefix";
+	   String[] sa = prefixes.split("[, :]");
+	   for (String p: sa) {
+	       if (!p.endsWith(".")) p = p + ".";
+		   if (key.startsWith(p)) return true;
+	   }
+	   return false;
    }
-
+   
    /**
     * Throw {@link IllegalArgumentException} if key specified does not start
     * with "app." or "cron."
@@ -130,6 +138,7 @@ public class ConfigPlugin extends PlayPlugin {
     */
    public List<IConfigItem> loadProperties() {
       Properties p = Play.configuration;
+      if (!p.containsKey(CONF_PREFIX)) p.setProperty(CONF_PREFIX, "");
       List<IConfigItem> l = new ArrayList<IConfigItem>();
       for (Object o : p.keySet()) {
          String key = o.toString();

@@ -8,12 +8,14 @@ import play.modules.morphia.Model;
 import com.google.code.morphia.annotations.Entity;
 import com.google.code.morphia.annotations.Id;
 
-@Entity("_conf")
+@Entity(value = "play_config", noClassnameStored = true)
 public class MorphiaConfigItem extends Model implements IConfigItem {
    
+   private static final long serialVersionUID = -333933019931968496L;
+
    @Id
    private String key;
-   
+
    private String value;
    
    @Override
@@ -54,7 +56,7 @@ public class MorphiaConfigItem extends Model implements IConfigItem {
 
    @Override
    public List<IConfigItem> pc_all() {
-      List<IConfigItem> l = new ArrayList();
+      List<IConfigItem> l = new ArrayList<IConfigItem>();
       List<MorphiaConfigItem> l0 = new MorphiaQuery(MorphiaConfigItem.class).order("_id").asList();
       for (MorphiaConfigItem i: l0) {
          l.add(i);

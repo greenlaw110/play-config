@@ -2,3 +2,6 @@
 .settings
 .classpath
 eclipse
+dist
+modules
+samples-and-tests/demo/bin
