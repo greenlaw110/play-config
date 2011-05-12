@@ -1,4 +1,4 @@
-self: local -> config 1.1
+self: local -> config trunk
 
 require:
     - play -> morphia 1.2.1beta2
