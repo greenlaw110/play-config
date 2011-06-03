@@ -51,8 +51,9 @@ public class ConfigPlugin extends PlayPlugin {
     * @return
     */
    public static boolean isAppConfig(String key) { 
+       if (CONF_PREFIX.equals(key)) return true;
 	   String prefixes = Play.configuration.getProperty(CONF_PREFIX, "");
-	   prefixes += ",app,cron,config.prefix";
+	   prefixes += ",app,cron";
 	   String[] sa = prefixes.split("[, :]");
 	   for (String p: sa) {
 	       if (!p.endsWith(".")) p = p + ".";
