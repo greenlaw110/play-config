@@ -1,4 +1,5 @@
 self: play -> config trunk
 
 require:
-    - play -> morphia 1.2.1beta2
+    - play -> morphia 1.2.1beta4
+    - play -> secure

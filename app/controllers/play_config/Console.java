@@ -7,7 +7,10 @@ import play.libs.Time;
 import play.modules.config.ConfigPlugin;
 import play.modules.config.models.IConfigItem;
 import play.mvc.Controller;
+import play.mvc.With;
+import controllers.Secure;
 
+@With(Secure.class)
 public class Console extends Controller {
    public static void index() {
       List<IConfigItem> configuration = ConfigPlugin.instance().all();
