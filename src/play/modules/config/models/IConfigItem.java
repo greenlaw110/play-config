@@ -63,4 +63,8 @@ public interface IConfigItem {
     * Remove this config item from data store
     */
    void pc_delete();
+   /**
+    * Replace @OnApplicationStart annotation because this is not an application class
+    */
+   void onApplicationStart() throws Exception;
 }

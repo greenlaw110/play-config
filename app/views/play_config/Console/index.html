@@ -1,94 +1,54 @@
-#{extends 'main.html' /}
-#{set title:'Play Config Console' /}
+<!DOCTYPE html>
 
-<style type="text/css">
-ul.header > li {
-  background-color: #444;
-  color: #eee;
-}
-ul.header, ul.table, ul.row {
-  list-style: none;
-  padding: 0;
-}
-ul.header > li, ul.row > li {
-  display: inline-block;
-  padding-top: 2px;
-  padding-left: 10px;
-}
-ul.header, ul.table {
-  margin: 0;
-}
-li.even ul.row > li {
-  background-color: #efefef;
-  height: 1.8em;
-}
-li.key {width: 20em;}
-li.value {width: 45em;}
-li.action {width: 8em;}
-
-div.error, div.success {
-  padding: 5px;
-  border: 1px solid #888;
-}
-div.error {
-  background-color: #FFF0F5;
-  color: #FF4500;
-  border-color: #FF4500;
-}
-div.success {
-  background-color: #98FB98;
-  color: #006400;
-  border-color: #006400;
-}
-div.success, div.actions, div.error, ul.header, ul.table {
-  position:relative;
-  float: left;
-  clear: both;
-}
-div.actions {
-  margin-top: 1em;
-}
-form.action {
-  position:relative;
-  float: left;
-}
-</style>
-
-#{if flash.error}
-<div class="error">
-  <strong>${flash.error}</strong>
-</div>
-#{/if}
-#{if flash.success}
-<div class="success">
-  <strong>${flash.success}</strong>
-</div>
-#{/if}
-
-<ul class="header">
-  <li class="key">key</li>
-  <li class="value">value</li>
-  <li class="action">action</li>
-</ul>
-<ul class="table">
+<html>
+    <head>
+        <title>#{get 'title' /}</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <link rel="stylesheet" type="text/css" media="screen" href="@{'/public/stylesheets/play_config.css'}">
+        #{get 'moreStyles' /}
+        <link rel="shortcut icon" type="image/png" href="@{'/public/images/favicon.png'}">
+        <script src="@{'/public/javascripts/jquery-1.5.2.min.js'}" type="text/javascript" charset="utf-8"></script>
+        #{get 'moreScripts' /}
+    </head>
+    <body>
+    <div class="busy-indicator"></div>
+    <div id="main">
+<h1>Play Configuration Console</h1>
+<p>Play-Config is a <a href="http://www.playframework.org">Play! Framework</a> plugin enable you to load your 
+configuration data from conf/application.conf to database. Basically Play-config enable you to modify the 
+configuration without touch application.conf and hence no need to restart Play. One additional benefit is
+that since your config is stored in your database, when you update application.conf from your source repository
+the test conf will not impact the current running system.</p> 
+<div id="config">
 #{list items:configuration}
-<li class="${_parity}">
-  #{form @update()}
-  <input type="hidden" name="key" value="${_.key}"/>
-  <ul class="row">
-    <li class="key" title="${_.key}">${_.key}</li>
-    <li class="value">
-      <input type="text" name="value" value="${_.value}" style="width: 40em"/>
-    </li>
-    <li class="action">
-      <input type="submit" name="_save" value="save"/>
-      <input type="submit" name="_delete" value="delete"/>
-    </li>
-  </ul>
-  #{/form}
-</li>
+<div class="field">
+<label for="${_.pc_key().slugify()}">${_.pc_key()}</label><br/>
+<input type="text" class="value" id="${_.pc_key().slugify()}" title="${_.pc_key()}" value="${_.pc_value()}" size="120">
+</div>
 #{/list}
-</ul>
+</div>
+<script type="text/javascript">
+$(function(){
+  $('body').ajaxSend(function(e, xhr, settings){
+    $('#busy-indicator').addClass('busy');
+  });
+  $('body').ajaxComplete(function(){
+    $('#busy-indicator').removeClass('busy');
+  });  
+});
+
+$('input.value').change(function(){
+  var $_ = $(this), key = $_.attr('title'), val = $_.val();
+  $.post("@{play_config.Console.update()}", {key: key, value: val}, function(resp){
+    if (resp && resp.error) {
+      alert("Invalid value!");
+      $_.val(resp.old_value).focus();
+    } else if (resp && resp.script) {
+      eval(resp.script);
+    }
+  });
+});
+</script>
 <div class="actions">
 #{form @index(), class: "action", method: "get"}
 <input type="submit" value="reset" title="reset configuration to previous state"/>
@@ -100,3 +60,6 @@ form.action {
 <input type="submit" value="restart" title="restart Play"/>
 #{/form}
 </div>
+    </div>
+    </body>
+</html>

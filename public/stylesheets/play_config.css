@@ -1,0 +1,33 @@
+#main {
+	position: relative;
+	width: 960px;
+	margin: 0 auto;
+}
+#config{
+	padding: 5px;
+	border: 1px solid #F5740B;
+	background: #FDE3CD;
+}
+.busy-indicator {
+  background: url(busy.gif) no-repeat 50% 50%;
+  position:absolute;
+  left: 45%;
+  top: 40%;
+  z-index: 999;
+  width: 64px;
+  height: 64px;
+  display: none;
+}
+.busy-indicator.busy {
+  display: block;
+}
+div.field {
+	margin-top: 5px;
+}
+div.actions {
+  margin-top: 1em;
+}
+form.action {
+  position:relative;
+  float: left;
+}

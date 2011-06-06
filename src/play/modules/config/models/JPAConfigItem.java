@@ -5,6 +5,7 @@ import java.util.List;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.PrePersist;
 import javax.persistence.Table;
 
 import play.Logger;
@@ -31,6 +32,13 @@ public class JPAConfigItem extends GenericModel implements IConfigItem {
     public String key;
 
     public String value;
+    
+    public String app_id;
+    
+    @PrePersist
+    public void setAppId() {
+        app_id = ConfigPlugin.appId();
+    }
 
     public JPAConfigItem() {
     }
@@ -70,7 +78,7 @@ public class JPAConfigItem extends GenericModel implements IConfigItem {
     public List<IConfigItem> pc_all() {
         List<IConfigItem> l = new ArrayList<IConfigItem>();
         List<JPAConfigItem> l0 = JPQL.instance.findBy(
-                JPAConfigItem.class.getName(), "order by key", new Object[] {});
+                JPAConfigItem.class.getName(), "app_id = ? order by key", new Object[] {app_id});
         for (JPAConfigItem ci : l0) {
             l.add(ci);
         }
@@ -102,6 +110,11 @@ public class JPAConfigItem extends GenericModel implements IConfigItem {
     @Override
     public void pc_delete() {
         delete();
+    }
+    
+    @Override
+    public void onApplicationStart() {
+        //TODO add support to multidb
     }
 
 }
