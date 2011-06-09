@@ -11,6 +11,7 @@ import play.db.jpa.JPAPlugin;
 import play.libs.Crypto;
 import play.modules.config.models.IConfigItem;
 import play.modules.config.models.JPAConfigItem;
+import play.modules.config.models.MongoConfigItem;
 
 /**
  * <code>ConfigPlugin</code> provide admin interface to manage application level
@@ -90,10 +91,22 @@ public class ConfigPlugin extends PlayPlugin {
 
     private Class<? extends Object> modelClass_ = null;
     private IConfigItem factory_ = null;
+    /* load properties before application start, this is used if ConfigItem impl has no dependencies on
+     * other modules
+     */
+    private boolean eagerLoaded_ = false;
 
     @Override
     public void onConfigurationRead() {
         appId_ = Crypto.passwordHash(Play.configuration.getProperty("application.name", "play-config"));
+        String clsName = Play.configuration.getProperty("config.modelClass",
+                DEF_MODEL_CLS_);
+        if (MongoConfigItem.class.getName().equals(clsName)) {
+            onApplicationStart();
+            afterApplicationStart();
+            eagerLoaded_ = true;
+            return;
+        }
         if (!isJPAModel_()) {
             return; // config item class is not JPAConfigItem, no need for
                     // additional configuration
@@ -110,6 +123,7 @@ public class ConfigPlugin extends PlayPlugin {
 
     @Override
     public void onApplicationStart() {
+        if (eagerLoaded_) return;
         String clsName = Play.configuration.getProperty("config.modelClass");
         try {
             modelClass_ = null == clsName ? JPAConfigItem.class : Class
@@ -132,6 +146,7 @@ public class ConfigPlugin extends PlayPlugin {
 
     @Override
     public void afterApplicationStart() {
+        if (eagerLoaded_) return;
         startTx_();
         try {
             if (Boolean.parseBoolean(Play.configuration.getProperty(
@@ -223,7 +238,7 @@ public class ConfigPlugin extends PlayPlugin {
                 DEF_MODEL_CLS_);
         return DEF_MODEL_CLS_.equals(clsName);
     }
-
+    
     private static void startTx_() {
         if (isJPAModel_()) {
             JPAPlugin.startTx(false);
