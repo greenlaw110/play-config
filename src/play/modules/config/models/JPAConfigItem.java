@@ -20,7 +20,7 @@ import play.modules.config.ConfigPlugin;
  * @version 1.0 18/12/2010
  */
 @Entity
-@Table(name = "_conf")
+@Table(name = "play_conf")
 public class JPAConfigItem extends GenericModel implements IConfigItem {
 
     /**
@@ -29,7 +29,7 @@ public class JPAConfigItem extends GenericModel implements IConfigItem {
     private static final long serialVersionUID = -8415264008115090076L;
 
     @Id
-    public String key;
+    public String _key;
 
     public String value;
     
@@ -44,13 +44,13 @@ public class JPAConfigItem extends GenericModel implements IConfigItem {
     }
 
     private JPAConfigItem(String key, String value) {
-        this.key = key;
+        this._key = key;
         this.value = value;
     }
 
     @Override
     public String pc_key() {
-        return key;
+        return _key;
     }
 
     @Override
@@ -70,7 +70,7 @@ public class JPAConfigItem extends GenericModel implements IConfigItem {
 
     @Override
     public String toString() {
-        return String.format("%1$s=%2$s", key, value);
+        return String.format("%1$s=%2$s", _key, value);
     }
 
     @SuppressWarnings("unchecked")
@@ -78,7 +78,7 @@ public class JPAConfigItem extends GenericModel implements IConfigItem {
     public List<IConfigItem> pc_all() {
         List<IConfigItem> l = new ArrayList<IConfigItem>();
         List<JPAConfigItem> l0 = JPQL.instance.findBy(
-                JPAConfigItem.class.getName(), "app_id = ? order by key", new Object[] {app_id});
+                JPAConfigItem.class.getName(), "app_id = ? order by _key", new Object[] {app_id});
         for (JPAConfigItem ci : l0) {
             l.add(ci);
         }

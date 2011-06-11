@@ -161,6 +161,11 @@ public class ConfigPlugin extends PlayPlugin {
         }
         Logger.debug(msg_("configuration loaded"));
     }
+    
+    @Override
+    public void detectChange() {
+        afterApplicationStart();
+    }
 
     /**
      * Load configuration from Play properties into data store. If one
