@@ -94,7 +94,7 @@ public class ConfigPlugin extends PlayPlugin {
     /* load properties before application start, this is used if ConfigItem impl has no dependencies on
      * other modules
      */
-    private boolean eagerLoaded_ = false;
+    private boolean loaded_ = false;
 
     @Override
     public void onConfigurationRead() {
@@ -104,7 +104,6 @@ public class ConfigPlugin extends PlayPlugin {
         if (MongoConfigItem.class.getName().equals(clsName)) {
             onApplicationStart();
             afterApplicationStart();
-            eagerLoaded_ = true;
             return;
         }
         if (!isJPAModel_()) {
@@ -123,7 +122,6 @@ public class ConfigPlugin extends PlayPlugin {
 
     @Override
     public void onApplicationStart() {
-        if (eagerLoaded_) return;
         String clsName = Play.configuration.getProperty("config.modelClass");
         try {
             modelClass_ = null == clsName ? JPAConfigItem.class : Class
@@ -146,7 +144,6 @@ public class ConfigPlugin extends PlayPlugin {
 
     @Override
     public void afterApplicationStart() {
-        if (eagerLoaded_) return;
         startTx_();
         try {
             if (Boolean.parseBoolean(Play.configuration.getProperty(
@@ -162,11 +159,6 @@ public class ConfigPlugin extends PlayPlugin {
         Logger.debug(msg_("configuration loaded"));
     }
     
-    @Override
-    public void detectChange() {
-        afterApplicationStart();
-    }
-
     /**
      * Load configuration from Play properties into data store. If one
      * configuration item already exists in the data store, then it will be used

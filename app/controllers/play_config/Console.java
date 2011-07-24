@@ -1,5 +1,7 @@
 package controllers.play_config;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import play.Play;
@@ -14,6 +16,16 @@ import controllers.Secure;
 public class Console extends Controller {
     public static void index() {
         List<IConfigItem> configuration = ConfigPlugin.instance().all();
+        Collections.sort(configuration, new Comparator<IConfigItem>(){
+
+            @Override
+            public int compare(IConfigItem o1, IConfigItem o2) {
+                if (null == o1) return -1;
+                if (null == o2) return 1;
+                return o1.pc_key().compareTo(o2.pc_key());
+            }
+            
+        });
         render(configuration);
     }
 
