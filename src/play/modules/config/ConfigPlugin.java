@@ -1,13 +1,22 @@
 package play.modules.config;
 
+import java.lang.annotation.Documented;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import javassist.Modifier;
 import play.Logger;
 import play.Play;
 import play.PlayPlugin;
+import play.classloading.ApplicationClasses.ApplicationClass;
 import play.db.jpa.JPAPlugin;
+import play.exceptions.ConfigurationException;
 import play.libs.Crypto;
 import play.modules.config.models.IConfigItem;
 import play.modules.config.models.JPAConfigItem;
@@ -36,9 +45,10 @@ import play.modules.config.models.MongoConfigItem;
  * 
  * @author greenlaw110@gmail.com
  * @version 1.0 18/12/2010
+ * @version 1.2 02/10/2011
  */
 public class ConfigPlugin extends PlayPlugin {
-    public static final String VERSION = "1.1";
+    public static final String VERSION = "1.2";
     public static final String CONF_PREFIX = "config.prefix";
     private static final String DEF_MODEL_CLS_ = JPAConfigItem.class.getName();
 
@@ -49,7 +59,15 @@ public class ConfigPlugin extends PlayPlugin {
     }
 
     private static String msg_(String msg) {
-        return String.format("ConfigPlugin-" + VERSION + "> %1$s", msg);
+        return new StringBuilder("ConfigPlugin-" + VERSION + "> ").append(msg).toString();
+    }
+    
+    private static void info_(String msg, Object... args) {
+        Logger.info(msg_(msg), args);
+    }
+    
+    private static void trace_(String msg, Object... args) {
+        Logger.trace(msg_(msg), args);
     }
 
     /**
@@ -91,19 +109,26 @@ public class ConfigPlugin extends PlayPlugin {
 
     private Class<? extends Object> modelClass_ = null;
     private IConfigItem factory_ = null;
-    /* load properties before application start, this is used if ConfigItem impl has no dependencies on
-     * other modules
-     */
-    private boolean loaded_ = false;
 
+    private boolean configured_ = false;
+    private RenderArgEnhancer e_ = new RenderArgEnhancer();
+    
+    @Override
+    public void enhance(ApplicationClass applicationClass) throws Exception {
+        e_.enhanceThisClass(applicationClass);
+    }
+    
     @Override
     public void onConfigurationRead() {
+        if (null == Play.classes || configured_) return;
+        configured_ = true;
+        trace_("onConfigurationRead");
         appId_ = Crypto.passwordHash(Play.configuration.getProperty("application.name", "play-config"));
         String clsName = Play.configuration.getProperty("config.modelClass",
                 DEF_MODEL_CLS_);
         if (MongoConfigItem.class.getName().equals(clsName)) {
-            onApplicationStart();
-            afterApplicationStart();
+            //onApplicationStart();
+            //afterApplicationStart();
             return;
         }
         if (!isJPAModel_()) {
@@ -122,7 +147,16 @@ public class ConfigPlugin extends PlayPlugin {
 
     @Override
     public void onApplicationStart() {
+        trace_("onApplicationStart");
         String clsName = Play.configuration.getProperty("config.modelClass");
+        if (null == clsName) {
+            for (PlayPlugin pp : Play.pluginCollection.getEnabledPlugins()) {
+                String cn = pp.getClass().getName();
+                if (cn.contains("Morphia") || cn.contains("Mongo")) {
+                    clsName = "play.modules.config.models.MongoConfigItem";
+                }
+            }
+        }
         try {
             modelClass_ = null == clsName ? JPAConfigItem.class : Class
                     .forName(clsName);
@@ -139,11 +173,15 @@ public class ConfigPlugin extends PlayPlugin {
             throw new RuntimeException(e);
         }
         instance_ = this;
+        RenderArgResolver.loadRenderArgResolver();
+
         Logger.info(msg_("initialized with modelClass: " + modelClass_));
     }
 
     @Override
     public void afterApplicationStart() {
+        trace_("afterApplicationStart");
+        loadAutoConfigs_();
         startTx_();
         try {
             if (Boolean.parseBoolean(Play.configuration.getProperty(
@@ -259,4 +297,77 @@ public class ConfigPlugin extends PlayPlugin {
     public static ConfigPlugin instance() {
         return instance_;
     }
+
+    @Documented
+    @Inherited
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(java.lang.annotation.ElementType.TYPE)
+    public static @interface AutoConfig {
+        /*
+         * define namespace of the configuration
+         */
+        String value() default "app";
+    }
+    
+    private static boolean autoConfLoaded_ = false;
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private static void loadAutoConfigs_() {
+        if (autoConfLoaded_) return;
+        msg_("load auto config...");
+        List<Class> cl = Play.classloader.getAnnotatedClasses(AutoConfig.class);
+        for (Class c: cl) {
+            loadAutoConfigs_(c, ((AutoConfig)c.getAnnotation(AutoConfig.class)).value());
+        }
+    }
+    
+    @SuppressWarnings("rawtypes")
+    private static void loadAutoConfigs_(Class c, String ns) {
+        Logger.debug("loading auto config for %s", c);
+        autoConfLoaded_ = true;
+        Class[] ca = c.getClasses();
+        for (Class c0: ca) {
+            int mod = c0.getModifiers();
+            if (Modifier.isStatic(mod)) {
+                loadAutoConfigs_(c0, ns + "." + c0.getSimpleName());
+            }
+        }
+        Field[] fa = c.getFields();
+        for (Field f: fa) {
+            if (Modifier.isStatic(f.getModifiers())) {
+                loadAutoConfig_(f, ns);
+            }
+        }
+    }
+    
+    private static void loadAutoConfig_(Field f, String ns) {
+        String key = ns + "." + f.getName();
+        String val = Play.configuration.getProperty(key);
+        Class<?> type = f.getType();
+        try {
+            if (null != val) {
+                //f.setAccessible(true);
+                if (String.class.equals(type)) {
+                    f.set(null, val);
+                } else if (Integer.TYPE.equals(type)) {
+                    f.set(null, Integer.parseInt(val));
+                } else if (Boolean.TYPE.equals(type)) {
+                    f.set(null, Boolean.parseBoolean(val));
+                } else if (Long.TYPE.equals(type)) {
+                    f.set(null, Long.parseLong(val));
+                } else if (Float.TYPE.equals(type)) {
+                    f.set(null, Float.parseFloat(val));
+                } else {
+                    Logger.warn("Config[%s] field type[%s] not recognized", key, type);
+                }
+            } else {
+                Object o = f.get(null);
+                if (null != o) Play.configuration.setProperty(key, o.toString());
+                else Logger.warn("Config[%s] not initialized", key); 
+            }
+        } catch (Exception e) {
+            throw new ConfigurationException("Error get configuration " + key + ": " + e.getMessage());
+        }
+    }
+
+
 }

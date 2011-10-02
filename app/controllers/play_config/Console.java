@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import play.Play;
+import play.Play.Mode;
 import play.libs.Time;
 import play.modules.config.ConfigPlugin;
 import play.modules.config.models.IConfigItem;
@@ -74,7 +75,7 @@ public class Console extends Controller {
     }
 
     public static void restart() {
-        Play.start();
+        if (Mode.DEV == Play.mode) Play.start();
         index();
     }
 }

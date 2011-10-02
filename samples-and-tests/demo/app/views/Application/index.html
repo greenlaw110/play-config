@@ -33,11 +33,15 @@ dd {
 <div class="section">
 <h2>Application Configurations</h2>
 <dl>
-#{list items:configuration.keySet()}
-<dt>${_}</dt>
-<dd>${configuration.get(_)}</dd>
-#{/list}
-</dd>
+<dt>app.conf.one</dt>
+<dd>${app_conf_one}</dd>
+<dt>app.conf.two</dt>
+<dd>${app_conf_two}</dd>
+<dt>app.conf.url.google</dt>
+<dd>${app_conf_url_google}</dd>
+<dt>app.conf.url.facebook</dt>
+<dd>${app_conf_url_facebook}</dd>
+</dl>
 </div>
 
 <div class="section">

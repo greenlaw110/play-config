@@ -56,9 +56,11 @@ $('input.value').change(function(){
 #{form @reset(), class: "action"}
 <input type="submit" value="reload" title="reload configuration from application.conf"/>
 #{/form} 
+#{if play.Play.Mode.DEV == play.mode}
 #{form @restart(), class: "action"}
 <input type="submit" value="restart" title="restart Play"/>
 #{/form}
+#{/if}
 </div>
     </div>
     </body>

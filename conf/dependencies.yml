@@ -1,4 +1,4 @@
-self: play -> config trunk
+self: play -> config 1.2
 
 require:
     - play -> secure
