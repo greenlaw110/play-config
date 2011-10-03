@@ -124,8 +124,22 @@ public class ConfigPlugin extends PlayPlugin {
         configured_ = true;
         trace_("onConfigurationRead");
         appId_ = Crypto.passwordHash(Play.configuration.getProperty("application.name", "play-config"));
-        String clsName = Play.configuration.getProperty("config.modelClass",
-                DEF_MODEL_CLS_);
+        String clsName = Play.configuration.getProperty("config.modelClass");
+        if (null == clsName) {
+            for (PlayPlugin pp : Play.pluginCollection.getEnabledPlugins()) {
+                String cn = pp.getClass().getName();
+                if (cn.contains("Morphia") || cn.contains("Mongo")) {
+                    clsName = "play.modules.config.models.MongoConfigItem";
+                    break;
+                }
+            }
+        }
+        if (null == clsName) clsName = "play.modules.config.models.JPAConfigItem";
+        try {
+            modelClass_ = Class.forName(clsName);
+        } catch (ClassNotFoundException e) {
+            throw new ConfigurationException("cannot find config model class: " + clsName);
+        }
         if (MongoConfigItem.class.getName().equals(clsName)) {
             //onApplicationStart();
             //afterApplicationStart();
@@ -142,24 +156,13 @@ public class ConfigPlugin extends PlayPlugin {
             jpaEntities += ", " + DEF_MODEL_CLS_;
         }
         Play.configuration.put("jpa.entities", jpaEntities);
-        Logger.debug("jpaEntities property updated to: %1$s", jpaEntities);
+        info_("jpaEntities property updated to: %1$s", jpaEntities);
     }
 
     @Override
     public void onApplicationStart() {
         trace_("onApplicationStart");
-        String clsName = Play.configuration.getProperty("config.modelClass");
-        if (null == clsName) {
-            for (PlayPlugin pp : Play.pluginCollection.getEnabledPlugins()) {
-                String cn = pp.getClass().getName();
-                if (cn.contains("Morphia") || cn.contains("Mongo")) {
-                    clsName = "play.modules.config.models.MongoConfigItem";
-                }
-            }
-        }
         try {
-            modelClass_ = null == clsName ? JPAConfigItem.class : Class
-                    .forName(clsName);
             Object o = modelClass_.newInstance();
             if (!(o instanceof IConfigItem)) {
                 throw new RuntimeException(
@@ -175,7 +178,7 @@ public class ConfigPlugin extends PlayPlugin {
         instance_ = this;
         RenderArgResolver.loadRenderArgResolver();
 
-        Logger.info(msg_("initialized with modelClass: " + modelClass_));
+        info_("initialized with modelClass: " + modelClass_.getName());
     }
 
     @Override
@@ -268,25 +271,23 @@ public class ConfigPlugin extends PlayPlugin {
         return ci;
     }
 
-    private static boolean isJPAModel_() {
-        String clsName = Play.configuration.getProperty("config.modelClass",
-                DEF_MODEL_CLS_);
-        return DEF_MODEL_CLS_.equals(clsName);
+    private boolean isJPAModel_() {
+        return JPAConfigItem.class.equals(modelClass_);
     }
     
-    private static void startTx_() {
+    private void startTx_() {
         if (isJPAModel_()) {
             JPAPlugin.startTx(false);
         }
     }
 
-    private static void commitTx_() {
+    private void commitTx_() {
         if (isJPAModel_()) {
             JPAPlugin.closeTx(false);
         }
     }
 
-    private static void rollbackTx_() {
+    private void rollbackTx_() {
         if (isJPAModel_()) {
             JPAPlugin.closeTx(true);
         }

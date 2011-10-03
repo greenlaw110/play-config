@@ -1,6 +1,7 @@
 self: play -> config 1.2
 
 require:
+    - play 1.2
     - play -> secure
     - org.mongodb -> mongo-java-driver [2.2,)
 repositories:
