@@ -111,7 +111,7 @@ public class ConfigPlugin extends PlayPlugin {
     private IConfigItem factory_ = null;
 
     private boolean configured_ = false;
-    private RenderArgEnhancer e_ = new RenderArgEnhancer();
+    private RenderArgsEnhancer e_ = new RenderArgsEnhancer();
     
     @Override
     public void enhance(ApplicationClass applicationClass) throws Exception {
@@ -176,7 +176,7 @@ public class ConfigPlugin extends PlayPlugin {
             throw new RuntimeException(e);
         }
         instance_ = this;
-        RenderArgResolver.loadRenderArgResolver();
+        ConfigurationResolver.loadConfigurationResolver();
 
         info_("initialized with modelClass: " + modelClass_.getName());
     }
