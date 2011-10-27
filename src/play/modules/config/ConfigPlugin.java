@@ -48,7 +48,7 @@ import play.modules.config.models.MongoConfigItem;
  * @version 1.2 02/10/2011
  */
 public class ConfigPlugin extends PlayPlugin {
-    public static final String VERSION = "1.2";
+    public static final String VERSION = "1.2.1a";
     public static final String CONF_PREFIX = "config.prefix";
     private static final String DEF_MODEL_CLS_ = JPAConfigItem.class.getName();
 
@@ -64,6 +64,10 @@ public class ConfigPlugin extends PlayPlugin {
     
     private static void info_(String msg, Object... args) {
         Logger.info(msg_(msg), args);
+    }
+    
+    private static void debug_(String msg, Object... args) {
+        Logger.debug(msg_(msg), args);
     }
     
     private static void trace_(String msg, Object... args) {
@@ -177,6 +181,7 @@ public class ConfigPlugin extends PlayPlugin {
         }
         instance_ = this;
         ConfigurationResolver.loadConfigurationResolver();
+        loadAutoConfigs_();
 
         info_("initialized with modelClass: " + modelClass_.getName());
     }
@@ -184,7 +189,6 @@ public class ConfigPlugin extends PlayPlugin {
     @Override
     public void afterApplicationStart() {
         trace_("afterApplicationStart");
-        loadAutoConfigs_();
         startTx_();
         try {
             if (Boolean.parseBoolean(Play.configuration.getProperty(
@@ -310,11 +314,9 @@ public class ConfigPlugin extends PlayPlugin {
         String value() default "app";
     }
     
-    private static boolean autoConfLoaded_ = false;
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private static void loadAutoConfigs_() {
-        if (autoConfLoaded_) return;
-        msg_("load auto config...");
+        debug_("load auto config...");
         List<Class> cl = Play.classloader.getAnnotatedClasses(AutoConfig.class);
         for (Class c: cl) {
             loadAutoConfigs_(c, ((AutoConfig)c.getAnnotation(AutoConfig.class)).value());
@@ -323,8 +325,7 @@ public class ConfigPlugin extends PlayPlugin {
     
     @SuppressWarnings("rawtypes")
     private static void loadAutoConfigs_(Class c, String ns) {
-        Logger.debug("loading auto config for %s", c);
-        autoConfLoaded_ = true;
+        debug_("loading auto config for %s", c);
         Class[] ca = c.getClasses();
         for (Class c0: ca) {
             int mod = c0.getModifiers();

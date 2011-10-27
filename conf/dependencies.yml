@@ -1,4 +1,4 @@
-self: play -> config 1.2.1
+self: play -> config 1.2.1a
 
 require:
     - play 1.2
