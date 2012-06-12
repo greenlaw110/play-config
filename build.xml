@@ -4,11 +4,11 @@
     <property file="./build.properties" />
 
     <path id="project.classpath">
-        <pathelement path="${play.path}/framework/play.jar"/>
+        <pathelement path="${play.path}/framework/play-1.2.x-95ec05d.jar"/>
         <fileset dir="${play.path}/framework/lib">
                 <include name="*.jar"/>
         </fileset>
-        <fileset dir="${play.path}/modules/morphia-1.2.4d/lib">
+        <fileset dir="${play.path}/modules/morphia-1.2.6a/lib">
                 <include name="*.jar"/>
         </fileset>
         <fileset dir="lib">
